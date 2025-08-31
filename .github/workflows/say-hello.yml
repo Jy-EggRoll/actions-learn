@@ -7,8 +7,16 @@ jobs:
   print-info:
     runs-on: windows-latest
     steps:
-      - name: test
+      - name: Get System info
+        run: systeminfo
+      - name: Install fastfetch
+        run: winget search fastfetch
+      - name: Setup Rust with MSVC toolchain
         run: |
-          echo Hello
-          powershell
-          systeminfo
+          # 安装 Rust toolchain，并指定 MSVC 目标
+          rustup toolchain install stable-x86_64-pc-windows-msvc
+          rustup default stable-x86_64-pc-windows-msvc
+          
+          # 可选：验证安装
+          rustc --version
+          cargo --version
