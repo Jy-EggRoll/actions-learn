@@ -34,4 +34,6 @@ jobs:
           java -version
           
           echo "--- Verifying C++ (MSVC) ---"
+          # 在运行 cl.exe 前，先加载 MSVC 的环境变量
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
           cl
