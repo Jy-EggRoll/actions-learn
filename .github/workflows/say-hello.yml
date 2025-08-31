@@ -1,13 +1,14 @@
-name: Say Hello
+name: 学习与测试
 
 on:
   push:
 
 jobs:
-  say-hello:
+  输出虚拟机信息:
     runs-on: windows-latest
     steps:
-      - name: say-hello
-        run: echo "Hello"
-        run: powershell
-        run: systeminfo
+      - name: 测试
+        run: |
+          echo Hello
+          powershell
+          systeminfo
