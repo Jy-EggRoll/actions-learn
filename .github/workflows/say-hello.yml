@@ -1,13 +1,13 @@
-name: 学习与测试
+name: Learn and Test
 
 on:
   push:
 
 jobs:
-  输出虚拟机信息:
+  print-info:
     runs-on: windows-latest
     steps:
-      - name: 测试
+      - name: test
         run: |
           echo Hello
           powershell
