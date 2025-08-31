@@ -1,22 +1,37 @@
-name: Learn and Test
+name: Test all languages on Windows
 
 on:
   push:
+    branches:
+      - main
 
 jobs:
-  print-info:
+  verify-environments:
     runs-on: windows-latest
+
     steps:
-      - name: Get System info
-        run: systeminfo
-      # - name: Install fastfetch
-      #   run: winget search fastfetch
-      - name: Setup Rust with MSVC toolchain
+      - name: Check all pre-installed language environments
         run: |
-          # 安装 Rust toolchain，并指定 MSVC 目标
-          rustup toolchain install stable-x86_64-pc-windows-msvc
-          rustup default stable-x86_64-pc-windows-msvc
-          
-          # 可选：验证安装
+          echo "--- Verifying Rust ---"
           rustc --version
           cargo --version
+          
+          echo "--- Verifying Python ---"
+          python --version
+          pip --version
+          
+          echo "--- Verifying Node.js ---"
+          node --version
+          npm --version
+          
+          echo "--- Verifying Go ---"
+          go version
+          
+          echo "--- Verifying Ruby ---"
+          ruby --version
+          
+          echo "--- Verifying Java ---"
+          java -version
+          
+          echo "--- Verifying C++ (MSVC) ---"
+          cl
