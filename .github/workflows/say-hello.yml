@@ -9,8 +9,8 @@ jobs:
     steps:
       - name: Get System info
         run: systeminfo
-      - name: Install fastfetch
-        run: winget search fastfetch
+      # - name: Install fastfetch
+      #   run: winget search fastfetch
       - name: Setup Rust with MSVC toolchain
         run: |
           # 安装 Rust toolchain，并指定 MSVC 目标
