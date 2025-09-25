@@ -24,7 +24,7 @@ jobs:
       - name: Package ps1 to exe
         run: |
           if (Test-Path -Path "Get-BatteryInfo.ps1") {
-              ps2exe .\Get-BatteryInfo.ps1 .\Get-BatteryInfo.exe
+              Invoke-ps2exe .\Get-BatteryInfo.ps1 .\Get-BatteryInfo.exe
               echo "EXE_PACKAGE=Get-BatteryInfo.exe" >> $env:GITHUB_ENV
               Write-Host "Successfully created Get-BatteryInfo.exe"
           } else {
