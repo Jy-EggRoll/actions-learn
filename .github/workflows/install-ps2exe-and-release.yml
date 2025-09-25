@@ -31,6 +31,7 @@ jobs:
               Write-Error "File not found (Get-BatteryInfo.ps1)"
               exit 1
           }
+        shell: pwsh  # 使用 PowerShell 7
         
       - name: Generate release notes
         id: release_notes
