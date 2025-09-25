@@ -1,7 +1,6 @@
 name: Install PS2EXE and Release
 
-on:  # 手动触发或识别标签触发
-  workflow_dispatch:
+on:
   push:
     tags:
       - v*.*.*  # 匹配 vX.Y.Z 格式的标签
