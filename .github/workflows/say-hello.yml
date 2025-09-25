@@ -1,9 +1,7 @@
 name: Test all languages on Windows
 
-on:
-  push:
-    branches:
-      - main
+on:  # 仅手动触发
+  workflow_dispatch:
 
 jobs:
   verify-environments:

@@ -1,9 +1,7 @@
 name: Auto Create Release
 
-on:
-  push:
-    tags:
-      - 'v*.*.*'  # 匹配 vX.Y.Z 格式的标签
+on: # 仅手动触发
+  workflow_dispatch:
 
 permissions:
   contents: write
