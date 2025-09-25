@@ -49,65 +49,6 @@ jobs:
           }
         shell: pwsh  # 使用 PowerShell 7
 
-      - name: Get current tag
-        id: current_tag
-        run: |
-          $currentTag = $env:GITHUB_REF -replace 'refs/tags/', ''
-          echo "current_tag=$currentTag" >> $env:GITHUB_OUTPUT
-          Write-Host "Current tag: $currentTag"
-        shell: pwsh
-
-      - name: Find previous version tag
-        id: previous_tag
-        run: |
-          $currentTag = "${{ steps.current_tag.outputs.current_tag }}"
-          $previousTag = $null
-
-          # 显示所有可用标签用于调试
-          Write-Host "所有可用标签:"
-          git tag --list "v*.*.*" | ForEach-Object { Write-Host $_ }
-
-          # 提取版本号（移除 v 前缀）
-          if ($currentTag -match 'v(\d+\.\d+\.\d+)') {
-              $currentVersion = [version]$matches[1]
-
-              # 获取所有符合格式的标签并排序
-              $allTags = git tag --list "v*.*.*" `
-                  | Where-Object { $_ -ne $currentTag -and $_ -match 'v(\d+\.\d+\.\d+)' } `
-                  | ForEach-Object {
-                      [PSCustomObject]@{
-                          Tag = $_
-                          Version = [version]$matches[1]
-                      }
-                  } `
-                  | Sort-Object -Property Version -Descending
-
-              # 显示排序后的标签用于调试
-              Write-Host "排序后的标签:"
-              $allTags | ForEach-Object { Write-Host "$($_.Tag)" }
-
-              # 查找最新的前一个版本
-              if ($allTags.Count -gt 0) {
-                  $previousTag = $allTags[0].Tag
-              }
-          }
-
-          if ($previousTag) {
-              Write-Host "找到前一个标签: $previousTag"
-          } else {
-              Write-Host "未找到前一个标签"
-          }
-
-          echo "previous_tag=$previousTag" >> $env:GITHUB_OUTPUT
-        shell: pwsh
-        
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Get-BatteryInfo-${{ matrix.arch }}
-          path: ${{ env.EXE_FILE }}
-          retention-days: 1
-
   release:
     needs: build
     runs-on: ubuntu-latest
