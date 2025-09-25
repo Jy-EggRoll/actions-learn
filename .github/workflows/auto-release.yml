@@ -1,0 +1,126 @@
+name: Auto Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # 匹配 vX.Y.Z 格式的标签
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 拉取所有历史记录
+
+      - name: Package data directory
+        run: |
+          if (Test-Path -Path "data") {
+              Compress-Archive -Path data\* -DestinationPath data.zip
+              echo "ZIP_PACKAGE=data.zip" >> $env:GITHUB_ENV
+              Write-Host "Successfully created data.zip"
+          } else {
+              Write-Error "Directory not found (data)"
+              exit 1
+          }
+        shell: pwsh  # 使用 PowerShell 7
+
+      - name: Get current tag
+        id: current_tag
+        run: |
+          $currentTag = $env:GITHUB_REF -replace 'refs/tags/', ''
+          echo "current_tag=$currentTag" >> $env:GITHUB_OUTPUT
+          Write-Host "Current tag: $currentTag"
+        shell: pwsh
+
+      - name: Find previous version tag
+        id: previous_tag
+        run: |
+          $currentTag = "${{ steps.current_tag.outputs.current_tag }}"
+          $previousTag = $null
+
+          # 显示所有可用标签用于调试
+          Write-Host "所有可用标签:"
+          git tag --list "v*.*.*" | ForEach-Object { Write-Host $_ }
+
+          # 提取版本号（移除 v 前缀）
+          if ($currentTag -match 'v(\d+\.\d+\.\d+)') {
+              $currentVersion = [version]$matches[1]
+
+              # 获取所有符合格式的标签并排序
+              $allTags = git tag --list "v*.*.*" `
+                  | Where-Object { $_ -ne $currentTag -and $_ -match 'v(\d+\.\d+\.\d+)' } `
+                  | ForEach-Object {
+                      [PSCustomObject]@{
+                          Tag = $_
+                          Version = [version]$matches[1]
+                      }
+                  } `
+                  | Sort-Object -Property Version -Descending
+
+              # 显示排序后的标签用于调试
+              Write-Host "排序后的标签:"
+              $allTags | ForEach-Object { Write-Host "$($_.Tag)" }
+
+              # 查找最新的前一个版本
+              if ($allTags.Count -gt 0) {
+                  $previousTag = $allTags[0].Tag
+              }
+          }
+
+          if ($previousTag) {
+              Write-Host "找到前一个标签: $previousTag"
+          } else {
+              Write-Host "未找到前一个标签"
+          }
+
+          echo "previous_tag=$previousTag" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          $currentTag = "${{ steps.current_tag.outputs.current_tag }}"
+          $previousTag = "${{ steps.previous_tag.outputs.previous_tag }}"
+
+          try {
+              "# 发布详情`n" | Out-File -FilePath release_notes.txt -Encoding utf8
+              "`## 变更记录`n" | Out-File -FilePath release_notes.txt -Encoding utf8 -Append
+
+              if (-not $previousTag) {
+                  Write-Host "从初始提交到 $currentTag 生成变更记录"
+                  $notes = git log "$currentTag" --pretty=format:"- %s (%h) - %cd" --date=format:"%Y-%m-%d %H:%M"
+              } else {
+                  Write-Host "从 $previousTag 到 $currentTag 生成变更记录"
+                  $notes = git log "$previousTag..$currentTag" --pretty=format:"- %s (%h) - %cd" --date=format:"%Y-%m-%d %H:%M"     
+              }
+
+              if (-not $notes) {
+                  $notes = "- 无明显变更"
+              }
+
+              $notes | Out-File -FilePath release_notes.txt -Encoding utf8 -Append
+              echo "notes_file=release_notes.txt" >> $env:GITHUB_ENV
+
+              Write-Host "生成的发布说明:"
+              Get-Content release_notes.txt
+          } catch {
+              Write-Error "生成发布说明失败: $_"
+              exit 1
+          }
+        shell: pwsh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.current_tag.outputs.current_tag }}
+          name: Release ${{ steps.current_tag.outputs.current_tag }}
+          body_path: ${{ env.notes_file }}
+          files: ${{ env.ZIP_PACKAGE }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
