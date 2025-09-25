@@ -49,6 +49,13 @@ jobs:
           }
         shell: pwsh  # 使用 PowerShell 7
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Get-BatteryInfo-${{ matrix.arch }}
+          path: ${{ env.EXE_FILE }}
+          retention-days: 1
+
   release:
     needs: build
     runs-on: ubuntu-latest
